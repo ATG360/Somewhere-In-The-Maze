@@ -1,10 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+
 
 public class PlayerMove : MonoBehaviour
 {
-
+    public bool IsHaveKey = false;
     public float speed = 10f;
 
     public float gravity = -9.81f;
@@ -14,7 +16,7 @@ public class PlayerMove : MonoBehaviour
     public CharacterController characterController;
 
     public Animator animator;
-    
+
     Vector3 velocity;
 
     public Transform point;
@@ -25,18 +27,20 @@ public class PlayerMove : MonoBehaviour
 
     bool Grounded;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    float Health = 100f;
+
+    public Slider slider;
+
+    public GameObject Blood;
+
+    public AudioSource audioSource;
 
     // Update is called once per frame
     void Update()
-    {   
-        Grounded = Physics.CheckSphere(point.position,radius,ground);
-        
-        if(Grounded && velocity.y < 0f)
+    {
+        Grounded = Physics.CheckSphere(point.position, radius, ground);
+
+        if (Grounded && velocity.y < 0f)
         {
             velocity.y = -1f;
         }
@@ -44,19 +48,31 @@ public class PlayerMove : MonoBehaviour
         float x = Input.GetAxisRaw("Horizontal");
         float z = Input.GetAxisRaw("Vertical");
 
-        if(x != 0f || z != 0f)
+        if (x != 0f || z != 0f)
+        {
             animator.SetTrigger("Run");
-        else
-            animator.SetTrigger("Idle");
+            if (Grounded)
+                audioSource.volume = 1f;
+        }
 
-        Vector3 Move = transform.forward * z + transform.right * x;  
+        else
+        {
+            animator.SetTrigger("Idle");
+            audioSource.volume = 0f;
+        }
+
+        if (!Grounded)
+            audioSource.volume = 0f;
+
+        Vector3 Move = transform.forward * z + transform.right * x;
 
         characterController.Move(Move * speed * Time.deltaTime);
 
         velocity.y += gravity * Time.deltaTime;
 
-        if(Input.GetButtonDown("Jump") && Grounded)
+        if (Input.GetButtonDown("Jump") && Grounded)
         {
+            AudioManager.instance.Play("Jump");
             velocity.y = Mathf.Sqrt(JumpHeight * -2 * gravity);
         }
 
@@ -64,5 +80,23 @@ public class PlayerMove : MonoBehaviour
 
         //characterController.Move(velocity)
 
+        if (Health <= 0f)
+        {
+            AudioManager.instance.Play("Blood");
+            Instantiate(Blood, transform.position, Quaternion.identity);
+            Destroy(gameObject);
+        }
+
+    }
+
+    public void DamagePlayer(float Damage)
+    {
+        Health -= Damage;
+        slider.value = Health;
+    }
+
+    private void OnDestroy()
+    {
+        GameManager.instance.RestartLevel();
     }
 }

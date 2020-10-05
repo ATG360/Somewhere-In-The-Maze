@@ -16,9 +16,22 @@ public class Enemy : MonoBehaviour
 
     public Animator animator;
 
+    public float Radius = .4f;
+
+    public LayerMask PlayerMask;
+
+    public float damage = 2f;
+    
+    private void Awake() {
+        Player = GameObject.Find("FPS").transform;
+    }
+
     // Update is called once per frame
     void Update()
     {
+        if(!Player)
+            return;
+
         if(Vector3.Distance(transform.position,Player.position) < RunDist || IsFollow)
         {
             if(Vector3.Distance(transform.position,Player.position) < AttackDist)
@@ -50,7 +63,11 @@ public class Enemy : MonoBehaviour
     {
         animator.SetTrigger("Attack");
         Run();
-        //Attack Animation
-        //Attack Logic
+        Physics.CheckSphere(transform.position,Radius,PlayerMask);
+
+            if(Physics.CheckSphere(transform.position,Radius,PlayerMask))
+            {
+                Player.GetComponent<PlayerMove>().DamagePlayer(damage);                
+            }
     }
 }

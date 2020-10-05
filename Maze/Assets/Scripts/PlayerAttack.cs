@@ -9,13 +9,17 @@ public class PlayerAttack : MonoBehaviour {
     public LayerMask Enemy;
 
     public Animator animator;
+
+    public GameObject Blood;
     
+    public bool SwordEnabled = false;
     private void Update() 
     {
-        if(Input.GetMouseButton(0))
+        
+        if(Input.GetMouseButton(0) && SwordEnabled)
         {
             animator.SetTrigger("Attack");
-
+            AudioManager.instance.Play("Sword");
             //Attack Logic
             Collider[] enemies = Physics.OverlapSphere(AttackPoint.position,Radius,Enemy);
 
@@ -23,18 +27,17 @@ public class PlayerAttack : MonoBehaviour {
             {
                 foreach (Collider C in enemies)
                 {
-                   StartCoroutine(Destroyer(C.gameObject));
+                    AudioManager.instance.Play("Blood");
+                    Instantiate(Blood,C.transform.position,Quaternion.identity);
+                    Destroy(C.gameObject);
                 }
             }
 
         }
     }
 
-    IEnumerator Destroyer(GameObject GO)
-    {
-        yield return new WaitForSeconds(.3f);
-
-        Destroy(GO);
+    private void OnDrawGizmosSelected() {
+        Gizmos.color = Color.green;
+        Gizmos.DrawSphere(AttackPoint.position,Radius);
     }
-
 }
